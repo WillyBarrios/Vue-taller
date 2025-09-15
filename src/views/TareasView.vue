@@ -9,7 +9,17 @@
       :items="tareas"
       class="elevation-1"
       :items-per-page="10"
+      :item-class="rowClass"
     >
+      <template v-slot:item.estado="{ item }">
+        <v-chip
+          :color="statusMeta((item && item.raw ? item.raw.estado : item.estado)).color"
+          variant="tonal"
+          size="small"
+        >
+          {{ statusMeta((item && item.raw ? item.raw.estado : item.estado)).label }}
+        </v-chip>
+      </template>
       <template v-slot:item.acciones="{ item, index }">
         <v-btn
           color="primary"
@@ -35,7 +45,14 @@
         <v-card-text>
           <v-form @submit.prevent="actualizarTarea">
             <v-text-field v-model="tareaEdit.nombre" label="Nombre" required></v-text-field>
-            <v-text-field v-model="tareaEdit.estado" label="Estado" required></v-text-field>
+            <v-select
+              v-model="tareaEdit.estado"
+              :items="estadoOptions"
+              item-title="title"
+              item-value="value"
+              label="Estado"
+              required
+            />
             <v-text-field v-model="tareaEdit.fecha_vencimiento" label="Fecha Vencimiento" required></v-text-field>
             <v-select
               v-model="tareaEdit.usuario_id"
@@ -64,7 +81,14 @@
           <v-form @submit.prevent="crearTarea">
             <v-text-field v-model="nuevaTarea.nombre" label="Nombre" required></v-text-field>
             <v-text-field v-model="nuevaTarea.descripcion" label="Descripción" required></v-text-field>
-            <v-text-field v-model="nuevaTarea.estado" label="Estado" required></v-text-field>
+            <v-select
+              v-model="nuevaTarea.estado"
+              :items="estadoOptions"
+              item-title="title"
+              item-value="value"
+              label="Estado"
+              required
+            />
             <v-select
               v-model="nuevaTarea.usuario_id"
               :items="usuarios"
@@ -106,11 +130,16 @@ export default {
       nuevaTarea: {
         nombre: '',
         descripcion: '',
-        estado: '',
+        estado: 'Pendiente',
         usuario_id: null,
         fecha_vencimiento: ''
       },
       usuarios: [],
+      estadoOptions: [
+        { title: 'Pendiente', value: 'Pendiente' },
+        { title: 'En progreso', value: 'en_progreso' },
+        { title: 'Completada', value: 'completada' },
+      ],
       headers: [
         { text: 'ID', value: 'id' },
         { text: 'Nombre', value: 'nombre' },
@@ -122,6 +151,27 @@ export default {
     };
   },
   methods: {
+    normalizeEstado(val) {
+      if (!val) return ''
+      const v = String(val).toLowerCase().trim().replace(/\s+/g, '_')
+      if (v === 'pendiente') return 'Pendiente'
+      if (v === 'en_progreso') return 'en_progreso'
+      if (v === 'en' || v === 'en_progreso' || v === 'en-progreso') return 'en_progreso'
+      if (v === 'completada' || v === 'completado') return 'completada'
+      return val
+    },
+    statusMeta(val) {
+      const v = this.normalizeEstado(val)
+      if (v === 'Pendiente') return { label: 'Pendiente', color: 'warning', row: 'row-pendiente' }
+      if (v === 'en_progreso') return { label: 'En progreso', color: 'info', row: 'row-progreso' }
+      if (v === 'completada') return { label: 'Completada', color: 'success', row: 'row-completada' }
+      return { label: val || '-', color: 'default', row: '' }
+    },
+    rowClass(row) {
+      const tarea = row && row.raw ? row.raw : row
+      const meta = this.statusMeta(tarea?.estado)
+      return meta.row
+    },
     async fetchUsuarios() {
       const { data } = await api.get('/usuarios/listUsers')
       // Solo tomar nombre e id
@@ -175,6 +225,7 @@ export default {
       const tarea = row && row.raw ? row.raw : row
       if (!tarea) return
       this.tareaEdit = { ...tarea };
+      this.tareaEdit.estado = this.normalizeEstado(this.tareaEdit.estado)
       if (!this.usuarios || this.usuarios.length === 0) {
         await this.fetchUsuarios()
       }
@@ -250,3 +301,15 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.row-pendiente {
+  background-color: #fff8e1; /* amber-50 */
+}
+.row-progreso {
+  background-color: #e3f2fd; /* blue-50 */
+}
+.row-completada {
+  background-color: #e8f5e9; /* green-50 */
+}
+</style>
