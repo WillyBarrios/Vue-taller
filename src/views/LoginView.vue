@@ -27,6 +27,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
+import axios from 'axios'
 
 const router = useRouter()
 const route = useRoute()
@@ -47,7 +48,7 @@ const onSubmit = async () => {
     errorMsg.value = ''
     loading.value = true
     try {
-        // Llamada a tu endpoint
+        // Llamada directa de login sin CSRF (temporalmente deshabilitado)
         const { data } = await api.post('/login', {
             email: email.value,
             password: password.value,
@@ -57,7 +58,7 @@ const onSubmit = async () => {
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(data.usuario))
 
-        // Redirigir (a lo que tengas, por ejemplo /usuarios)
+        // Redirigir
         const redirect = (route.query.redirect as string) || '/usuarios'
         router.push(redirect)
     } catch (e: any) {

@@ -20,6 +20,13 @@
       >
         Nuevo Usuario
       </v-btn>
+      <v-btn 
+        variant="text" 
+        :to="'/Tareas'"
+        prepend-icon="mdi-account-plus"
+      >
+        Tareas
+      </v-btn>
     </v-app-bar>
     
     <v-main>

@@ -5,6 +5,15 @@
     :loading="loading"
     class="elevation-1"
   >
+    <template #top>
+      <v-alert
+        v-if="errorMessage"
+        type="error"
+        variant="tonal"
+        class="ma-2"
+        density="comfortable"
+      >{{ errorMessage }}</v-alert>
+    </template>
     <template #item.created_at="{ item }">
       {{ formatDate(item.created_at) }}
     </template>
@@ -25,6 +34,7 @@ const props = defineProps<{ searchTerm?: string }>()
 
 const items = ref<Usuario[]>([])
 const loading = ref(false)
+const errorMessage = ref<string | null>(null)
 
 const headers = [
   { title: 'Nombre', value: 'nombre' },
@@ -37,8 +47,27 @@ const headers = [
 const fetchUsers = async () => {
   loading.value = true
   try {
-    const { data } = await api.get<Usuario[]>('/usuarios/listUsers')
-    items.value = data
+    errorMessage.value = null
+    const { data } = await api.get('/usuarios/listUsers')
+    const list = Array.isArray(data)
+      ? data
+      : Array.isArray((data as any)?.usuarios)
+        ? (data as any).usuarios
+        : Array.isArray((data as any)?.data)
+          ? (data as any).data
+          : []
+    items.value = list.map((u: any) => ({
+      id: Number(u.id ?? u.usuario_id ?? u.id_usuario ?? u.ID ?? u.Id ?? 0),
+      nombre: String(u.nombre ?? u.name ?? `${(u.first_name ?? '').trim()} ${(u.last_name ?? '').trim()}`.trim()),
+      email: String(u.email ?? u.correo ?? ''),
+      rol: String(u.rol ?? u.role ?? 'usuario') as 'admin' | 'usuario',
+      created_at: String(u.created_at ?? u.fecha_creacion ?? ''),
+    }))
+  } catch (err: any) {
+    console.error('fetchUsers error:', err?.response || err)
+    const status = err?.response?.status
+    const msg = err?.response?.data?.message || err?.message || 'Error cargando usuarios'
+    errorMessage.value = `No se pudieron cargar usuarios${status ? ' (' + status + ')' : ''}: ${msg}`
   } finally {
     loading.value = false
   }

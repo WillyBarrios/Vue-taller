@@ -12,6 +12,7 @@ const router = createRouter({
     { path: '/usuarios/:id/editar', name: 'usuarios-editar', component: () => import('@/views/UserForm.vue'), props: true, meta: { requiresAuth: true } },
 
     { path: '/:pathMatch(.*)*', redirect: '/usuarios' },
+    { path: '/tareas', name: 'tareas', component: () => import('@/views/TareasView.vue'), meta: { requiresAuth: true } },
   ],
 })
 
