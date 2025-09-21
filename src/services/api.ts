@@ -54,3 +54,33 @@ export async function ensureCsrf(): Promise<void> {
   const url = (APP_BASE ? `${APP_BASE}` : '') + '/sanctum/csrf-cookie'
   await axios.get(url, { withCredentials: true })
 }
+
+// Bearer auth helpers
+export function setAuthToken(token: string | null): void {
+  if (token) {
+    localStorage.setItem('token', token)
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  } else {
+    localStorage.removeItem('token')
+    delete api.defaults.headers.common['Authorization']
+  }
+}
+
+// Interceptor de respuesta: manejar 401/419 limpiando token y redirigiendo a login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status
+    if (status === 401 || status === 419) {
+      // limpiar token y redirigir a login
+      setAuthToken(null)
+      const current = window.location.pathname + window.location.search
+      const loginUrl = `/login?redirect=${encodeURIComponent(current)}`
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = loginUrl
+        return
+      }
+    }
+    return Promise.reject(error)
+  }
+)

@@ -27,7 +27,7 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
-import axios from 'axios'
+import { setAuthToken } from '@/services/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -55,7 +55,7 @@ const onSubmit = async () => {
         })
 
         // Guardar token y usuario
-        localStorage.setItem('token', data.token)
+        setAuthToken(data.token)
         localStorage.setItem('user', JSON.stringify(data.usuario))
 
         // Redirigir

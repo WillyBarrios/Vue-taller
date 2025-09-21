@@ -110,7 +110,7 @@
 </template>
 
 <script>
-import api, { ensureCsrf } from '@/services/api'
+import api from '@/services/api'
 
 export default {
   data() {
@@ -193,7 +193,6 @@ export default {
     },
     async crearTarea() {
       try {
-        await ensureCsrf()
         await api.post('/tareas/addTask', this.nuevaTarea)
         await this.fetchTareas()
         this.cerrarModalCrear()
@@ -262,8 +261,6 @@ export default {
 
         console.log('Updating task:', tareaId)
         console.log('Update data:', updateData)
-
-        await ensureCsrf()
         await api.put(`/tareas/updateTask/${tareaId}`, updateData)
         await this.fetchTareas()
         this.cerrarModal()
@@ -283,7 +280,6 @@ export default {
         if (!tareaId) throw new Error('No se pudo determinar el ID de la tarea')
         const confirmar = confirm(`¿Eliminar la tarea \"${tarea?.nombre ?? tareaId}\"?`)
         if (!confirmar) return
-        await ensureCsrf()
         await api.delete(`/tareas/deleteTask/${tareaId}`)
         await this.fetchTareas()
       } catch (err) {
