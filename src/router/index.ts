@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getStoredToken } from '@/services/api'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -17,9 +18,13 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const token = localStorage.getItem('token')
-  if (to.meta.requiresAuth && !token) return { name: 'login', query: { redirect: to.fullPath } }
-  if (to.name === 'login' && token) return { name: 'usuarios' }
+  const token = getStoredToken()
+  if (to.meta.requiresAuth && !token) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.name === 'login' && token) {
+    return { name: 'usuarios' }
+  }
   return true
 })
 

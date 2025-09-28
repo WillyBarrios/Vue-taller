@@ -1,5 +1,15 @@
 import axios from 'axios'
 
+// Utilidad multi-tenant: clave de token por host
+function storageTokenKey(host?: string) {
+  const h = host || (typeof window !== 'undefined' ? window.location.host : 'default')
+  return `token:${h}`
+}
+
+export function getStoredToken(host?: string): string | null {
+  try { return localStorage.getItem(storageTokenKey(host)) } catch { return null }
+}
+
 // Bases del backend
 // Si VITE_API_URL es relativo (p.ej. '/api'), usaremos el mismo origen con proxy de Vite
 export const API_BASE = import.meta.env.VITE_API_URL || '/api'
@@ -36,9 +46,8 @@ api.interceptors.request.use((config) => {
 
   // rutas que no deben llevar token Bearer
   const noAuthEndpoints = ['/login', '/register']
-
   if (!noAuthEndpoints.includes(config.url || '')) {
-    const bearerToken = localStorage.getItem('token')
+    const bearerToken = getStoredToken()
     if (bearerToken) config.headers.Authorization = `Bearer ${bearerToken}`
   }
 
@@ -56,12 +65,13 @@ export async function ensureCsrf(): Promise<void> {
 }
 
 // Bearer auth helpers
-export function setAuthToken(token: string | null): void {
+export function setAuthToken(token: string | null, host?: string): void {
+  const key = storageTokenKey(host)
   if (token) {
-    localStorage.setItem('token', token)
+    localStorage.setItem(key, token)
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`
   } else {
-    localStorage.removeItem('token')
+    try { localStorage.removeItem(key) } catch {}
     delete api.defaults.headers.common['Authorization']
   }
 }

@@ -55,8 +55,12 @@ const onSubmit = async () => {
         })
 
         // Guardar token y usuario
-        setAuthToken(data.token)
-        localStorage.setItem('user', JSON.stringify(data.usuario))
+        setAuthToken(data.token, window.location.host)
+        try {
+            localStorage.setItem(`user:${window.location.host}`, JSON.stringify(data.usuario))
+        } catch {}
+        // limpiar user global antiguo si existiera (migración)
+        try { localStorage.removeItem('user') } catch {}
 
         // Redirigir
         const redirect = (route.query.redirect as string) || '/usuarios'

@@ -101,6 +101,9 @@ const filtered = computed(() => {
   )
 })
 
-// recargar si quieres al cambiar término (opcional)
-/* watch(() => props.searchTerm, () => { ... }) */
+
+/*
+import { watch } from 'vue'
+watch(() => props.searchTerm, () => { fetchUsers() })
+*/
 </script>
